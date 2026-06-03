@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F2EDE4" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Momentos · Jesyka & Camilo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Inter:wght@300;400;500&family=Tenor+Sans&display=swap"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <p class="eyebrow">Mini-álbum</p>
+      <h1 class="display">Jesyka & Camilo</h1>
+      <p class="hint">Queremos verlos a través de tus ojos.</p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <label class="field-label">
+          <span class="eyebrow">Tu nombre <span class="muted">(opcional)</span></span>
+          <input id="author" type="text" maxlength="60" autocomplete="name" placeholder="Cómo firmas tu foto" />
+        </label>
+
+        <div class="actions actions--three">
+          <label class="btn-primary">
+            <input id="pick-photo" type="file" accept="image/*" capture="environment" hidden />
+            <span>Tomar foto</span>
+          </label>
+          <label class="btn-outline">
+            <input id="pick-video" type="file" accept="video/*" capture="environment" hidden />
+            <span>Grabar video</span>
+          </label>
+          <button id="open-note" type="button" class="btn-outline">Dejar una nota</button>
+        </div>
+        <p class="hint small">Video hasta 60 segundos · Foto hasta 15 MB · Nota hasta 280 caracteres</p>
+
+        <div id="preview" class="preview hidden" aria-live="polite"></div>
+        <div id="progress" class="progress hidden"><div class="bar"></div><span class="label"></span></div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+
+        <div id="note-sheet" class="note-sheet hidden" aria-live="polite">
+          <p class="eyebrow">Tu nota para los novios</p>
+          <textarea
+            id="note-body"
+            maxlength="280"
+            rows="5"
+            placeholder="Un deseo, un recuerdo, una bendición…"
+            autocomplete="off"
+          ></textarea>
+          <div class="note-meta">
+            <span class="hint small" id="note-counter">0 / 280</span>
+          </div>
+          <div class="note-actions">
+            <button id="cancel-note" type="button" class="btn-outline">Cancelar</button>
+            <button id="send-note" type="button" class="btn-primary">Pegar nota</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <p class="eyebrow">Galería compartida</p>
+        <p class="hint small" id="feed-status">Cargando…</p>
+        <div id="feed" class="feed"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Hecho con cariño para nuestra boda · 2026</p>
+    </footer>
+
+    <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Vista previa">
+      <button type="button" class="lightbox-close" aria-label="Cerrar">✕</button>
+      <div class="lightbox-content"></div>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

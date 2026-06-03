@@ -1,0 +1,24 @@
+{
+  "name": "momentos-jyc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mini-album de fotos/videos para invitados de la boda Jesyka & Camilo",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/static": "^7.0.4",
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "file-type": "^19.5.0"
+  }
+}
