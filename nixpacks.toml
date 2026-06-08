@@ -1,0 +1,10 @@
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-9_x", "python3", "gcc", "gnumake"]
+
+[phases.install]
+cmds = ["npm ci --build-from-source"]
+
+[start]
+cmd = "node server/index.js"
