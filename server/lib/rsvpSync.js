@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import ws from 'ws';
 import { createClient } from '@supabase/supabase-js';
 import { queries } from './db.js';
 import { emitNew } from './events.js';
@@ -17,7 +18,10 @@ export function createRsvpSync({ url, key, until, log }) {
     return { syncOnce: async () => ({ skipped: 'not_configured' }), start: () => {}, stop: () => {} };
   }
   const cutoff = until ? endOfDayUtc(until) : null;
-  const sb = createClient(url, key, { auth: { persistSession: false } });
+  const sb = createClient(url, key, {
+    auth: { persistSession: false },
+    realtime: { transport: ws },
+  });
   let timer = null;
 
   async function syncOnce(opts = {}) {
