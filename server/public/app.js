@@ -2,9 +2,48 @@ const MAX_VIDEO_SECONDS = 65;
 const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 const ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
 
+const UPLOADER_KEY = 'momentos:uploaderId';
+function uuid4() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0'));
+  return `${h.slice(0,4).join('')}-${h.slice(4,6).join('')}-${h.slice(6,8).join('')}-${h.slice(8,10).join('')}-${h.slice(10,16).join('')}`;
+}
+function getUploaderId() {
+  let id = null;
+  try { id = localStorage.getItem(UPLOADER_KEY); } catch {}
+  if (!id) {
+    id = uuid4();
+    try { localStorage.setItem(UPLOADER_KEY, id); } catch {}
+  }
+  return id;
+}
+const UPLOADER_ID = getUploaderId();
+
+// ─── Admin session ───────────────────────────────────────────────────────────
+const ADMIN_KEY = 'momentos:adminToken';
+function getAdminToken() {
+  try { return sessionStorage.getItem(ADMIN_KEY); } catch { return null; }
+}
+function setAdminToken(tok) {
+  try {
+    if (tok) sessionStorage.setItem(ADMIN_KEY, tok);
+    else sessionStorage.removeItem(ADMIN_KEY);
+  } catch {}
+  document.body.classList.toggle('is-admin', !!tok);
+}
+function adminHeaders(extra = {}) {
+  const tok = getAdminToken();
+  return tok ? { ...extra, 'X-Admin-Token': tok } : extra;
+}
+function isAdmin() { return !!getAdminToken(); }
+
 const state = {
   uploading: false,
   feed: new Map(),
+  showHidden: false,
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -123,6 +162,7 @@ function upload(file) {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/upload');
+    xhr.setRequestHeader('X-Uploader-Id', UPLOADER_ID);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
         const pct = Math.round((e.loaded / e.total) * 100);
@@ -213,6 +253,47 @@ function renderTile(item) {
   }
 
   tile.addEventListener('click', () => openLightbox(item));
+
+  const ownsIt = item.uploader_id && item.uploader_id === UPLOADER_ID;
+  if (ownsIt || isAdmin()) {
+    const del = document.createElement('span');
+    del.className = 'tile-del';
+    del.setAttribute('role', 'button');
+    del.setAttribute('aria-label', isAdmin() ? 'Ocultar este momento' : 'Borrar mi momento');
+    del.textContent = '×';
+    del.addEventListener('click', (e) => {
+      e.stopPropagation();
+      confirmDelete(item);
+    });
+    tile.appendChild(del);
+  }
+
+  if (isAdmin() && item.hidden) {
+    tile.classList.add('is-hidden');
+    const restore = document.createElement('span');
+    restore.className = 'tile-restore';
+    restore.setAttribute('role', 'button');
+    restore.setAttribute('aria-label', 'Restaurar este momento');
+    restore.textContent = '↺';
+    restore.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const r = await fetch(`/api/admin/items/${encodeURIComponent(item.id)}/restore`, {
+          method: 'POST',
+          headers: adminHeaders(),
+        });
+        if (!r.ok) throw new Error(String(r.status));
+        item.hidden = false;
+        tile.classList.remove('is-hidden');
+        restore.remove();
+        setStatus('Momento restaurado');
+      } catch {
+        setStatus('No se pudo restaurar', true);
+      }
+    });
+    tile.appendChild(restore);
+  }
+
   return tile;
 }
 
@@ -347,7 +428,7 @@ async function submitNote() {
     const author = authorEl.value.trim() || undefined;
     const r = await fetch('/api/notes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Uploader-Id': UPLOADER_ID },
       body: JSON.stringify({ body, author }),
     });
     const data = await r.json().catch(() => ({}));
@@ -366,4 +447,235 @@ async function submitNote() {
   }
 }
 
+// ─── Borrar propio / Ocultar admin ───────────────────────────────────────────
+const confirmEl = $('#confirm-delete');
+const confirmTitle = $('#confirm-title');
+const confirmHint = $('#confirm-hint');
+const confirmThumb = $('#confirm-thumb');
+const confirmCancel = $('#confirm-cancel');
+const confirmOk = $('#confirm-ok');
+const toastEl = $('#toast');
+const toastMsg = $('#toast-msg');
+const toastUndo = $('#toast-undo');
+
+let pendingDelete = null;
+let toastTimer = null;
+
+function confirmDelete(item) {
+  pendingDelete = item;
+  confirmThumb.innerHTML = '';
+  if (item.kind === 'image' && item.url) {
+    const img = document.createElement('img');
+    img.src = item.url;
+    confirmThumb.appendChild(img);
+  } else if (item.kind === 'video' && item.url) {
+    const v = document.createElement('video');
+    v.src = item.url + '#t=0.5';
+    v.muted = true;
+    v.playsInline = true;
+    confirmThumb.appendChild(v);
+  } else if (item.kind === 'note') {
+    const p = document.createElement('p');
+    p.className = 'confirm-note';
+    p.textContent = item.body ?? '';
+    confirmThumb.appendChild(p);
+  }
+  // Cambiar textos según sea admin o el dueño
+  if (isAdmin()) {
+    confirmTitle.textContent = 'Ocultar este momento';
+    confirmHint.textContent = 'Lo podés restaurar desde "Ver ocultos" en la barra admin.';
+    confirmOk.textContent = 'Ocultar';
+  } else {
+    confirmTitle.textContent = 'Borrar tu momento';
+    confirmHint.textContent = 'Solo vos lo podés deshacer durante 10 segundos.';
+    confirmOk.textContent = 'Borrar';
+  }
+  confirmEl.classList.remove('hidden');
+}
+
+function closeConfirm() {
+  pendingDelete = null;
+  confirmEl.classList.add('hidden');
+  confirmThumb.innerHTML = '';
+}
+
+confirmCancel.addEventListener('click', closeConfirm);
+confirmEl.addEventListener('click', (e) => {
+  if (e.target === confirmEl) closeConfirm();
+});
+confirmOk.addEventListener('click', async () => {
+  if (!pendingDelete) return;
+  const item = pendingDelete;
+  confirmOk.disabled = true;
+  const adminMode = isAdmin();
+  const url = adminMode
+    ? `/api/admin/items/${encodeURIComponent(item.id)}`
+    : `/api/items/${encodeURIComponent(item.id)}`;
+  const headers = adminMode ? adminHeaders() : { 'X-Uploader-Id': UPLOADER_ID };
+  try {
+    const r = await fetch(url, { method: 'DELETE', headers });
+    if (!r.ok) {
+      if (r.status === 401 && adminMode) {
+        setAdminToken(null);
+        setStatus('Sesión admin expirada', true);
+      } else {
+        const msg = (await r.json().catch(() => ({}))).error ?? 'No se pudo borrar';
+        setStatus(msg, true);
+      }
+    } else {
+      if (adminMode && state.showHidden) {
+        // re-render del tile como oculto
+        item.hidden = true;
+        const old = feedEl.querySelector(`[data-id="${item.id}"]`);
+        if (old) old.replaceWith(renderTile(item));
+      } else {
+        removeTile(item.id);
+      }
+      if (!adminMode) showUndoToast(item);
+    }
+  } catch {
+    setStatus('Error de red al borrar', true);
+  } finally {
+    confirmOk.disabled = false;
+    closeConfirm();
+  }
+});
+
+function showUndoToast(item) {
+  clearTimeout(toastTimer);
+  toastMsg.textContent = 'Foto borrada';
+  toastEl.classList.remove('hidden');
+  const onUndo = async () => {
+    toastUndo.removeEventListener('click', onUndo);
+    toastEl.classList.add('hidden');
+    clearTimeout(toastTimer);
+    try {
+      const r = await fetch(`/api/items/${encodeURIComponent(item.id)}/restore`, {
+        method: 'POST',
+        headers: { 'X-Uploader-Id': UPLOADER_ID },
+      });
+      if (r.ok) {
+        prependTile(item);
+        setStatus('Foto restaurada');
+      } else {
+        setStatus('No se pudo restaurar', true);
+      }
+    } catch {
+      setStatus('Error de red al restaurar', true);
+    }
+  };
+  toastUndo.addEventListener('click', onUndo);
+  toastTimer = setTimeout(() => {
+    toastUndo.removeEventListener('click', onUndo);
+    toastEl.classList.add('hidden');
+  }, 10000);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !confirmEl.classList.contains('hidden')) closeConfirm();
+});
+
+// ─── Admin UI ────────────────────────────────────────────────────────────────
+const adminDot = $('#admin-dot');
+const adminModal = $('#admin-modal');
+const adminInput = $('#admin-input');
+const adminError = $('#admin-error');
+const adminCancel = $('#admin-cancel');
+const adminOk = $('#admin-ok');
+const adminBar = $('#admin-bar');
+const adminToggleHidden = $('#admin-toggle-hidden');
+const adminLogout = $('#admin-logout');
+
+function refreshAdminBar() {
+  if (isAdmin()) {
+    adminBar?.classList.remove('hidden');
+    document.body.classList.add('is-admin');
+  } else {
+    adminBar?.classList.add('hidden');
+    document.body.classList.remove('is-admin');
+    state.showHidden = false;
+    if (adminToggleHidden) adminToggleHidden.textContent = 'Ver ocultos';
+  }
+}
+
+adminDot?.addEventListener('click', () => {
+  adminInput.value = '';
+  adminError.textContent = '';
+  adminModal.classList.remove('hidden');
+  setTimeout(() => adminInput.focus(), 50);
+});
+adminCancel?.addEventListener('click', () => adminModal.classList.add('hidden'));
+adminModal?.addEventListener('click', (e) => {
+  if (e.target === adminModal) adminModal.classList.add('hidden');
+});
+adminOk?.addEventListener('click', tryAdminLogin);
+adminInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') tryAdminLogin();
+});
+
+async function tryAdminLogin() {
+  const token = adminInput.value.trim();
+  if (!token) return;
+  adminOk.disabled = true;
+  try {
+    const r = await fetch('/api/admin/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    if (!r.ok) {
+      adminError.textContent = 'Código incorrecto';
+      return;
+    }
+    setAdminToken(token);
+    adminModal.classList.add('hidden');
+    refreshAdminBar();
+    await reloadFeed();
+    setStatus('Modo admin activado');
+  } catch {
+    adminError.textContent = 'Error de red';
+  } finally {
+    adminOk.disabled = false;
+  }
+}
+
+adminLogout?.addEventListener('click', async () => {
+  setAdminToken(null);
+  refreshAdminBar();
+  await reloadFeed();
+  setStatus('Sesión admin cerrada');
+});
+
+adminToggleHidden?.addEventListener('click', async () => {
+  state.showHidden = !state.showHidden;
+  adminToggleHidden.textContent = state.showHidden ? 'Ocultar ocultos' : 'Ver ocultos';
+  await reloadFeed();
+});
+
+async function reloadFeed() {
+  state.feed.clear();
+  feedEl.innerHTML = '';
+  if (isAdmin() && state.showHidden) {
+    try {
+      const r = await fetch('/api/admin/feed?limit=200', { headers: adminHeaders() });
+      if (r.status === 401) {
+        setAdminToken(null);
+        refreshAdminBar();
+        return loadInitial();
+      }
+      const { items } = await r.json();
+      items.forEach((it) => {
+        state.feed.set(it.id, it);
+        feedEl.appendChild(renderTile(it));
+      });
+      updateFeedStatus();
+    } catch {
+      feedStatus.textContent = 'No se pudo cargar la galería admin.';
+    }
+  } else {
+    await loadInitial();
+  }
+}
+
+refreshAdminBar();
 loadInitial().then(connectStream);

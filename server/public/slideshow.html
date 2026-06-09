@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1C1B17" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Momentos · Presentación · Jesyka & Camilo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Inter:wght@300;400;500&family=Tenor+Sans&display=swap"
+    />
+    <style>
+      :root {
+        --linen: #F2EDE4;
+        --cream: #FBF7EF;
+        --champagne: #D9C7A7;
+        --champagne-mid: #B89C6E;
+        --olive-deep: #3B402C;
+        --ink: #1C1B17;
+        --display: 'Cormorant Garamond', serif;
+        --serif: 'Tenor Sans', serif;
+        --body: 'Inter', system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #000;
+        color: var(--cream);
+        font-family: var(--body);
+        overflow: hidden;
+        cursor: none;
+      }
+      #stage {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 800ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+      }
+      .slide.is-on { opacity: 1; }
+      .slide img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: center;
+        animation: kenburns 8s ease-out forwards;
+      }
+      @keyframes kenburns {
+        0%   { transform: scale(1.0) translate(0, 0); }
+        100% { transform: scale(1.08) translate(-1.5%, -1.5%); }
+      }
+      .slide.note {
+        background: linear-gradient(135deg, #2a2f1f 0%, #1c1b17 60%, #322a1f 100%);
+      }
+
+      /* ─── Tablero de notas (Wall of Love) ─────────────────── */
+      .slide.board {
+        background:
+          radial-gradient(ellipse at center, #fbf7ef 0%, #f2ede4 70%, #e8e0cf 100%);
+        align-items: center;
+        justify-content: center;
+        padding: 4vh 4vw;
+      }
+      .slide.board::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        box-shadow: inset 0 0 120px 30px rgba(90,99,71,0.10);
+      }
+      .notes-board {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 1500px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-content: center;
+        align-items: flex-start;
+        gap: 1.6rem 1.5rem;
+        padding-top: 22px;
+      }
+      .note-card-small {
+        flex: 0 1 clamp(240px, 22vw, 340px);
+        margin: 0;
+        padding: 1.5rem 1.4rem 1.2rem;
+        background: var(--note-bg, #fbf7ef);
+        border: 1px solid rgba(184,156,110,0.28);
+        border-radius: 4px;
+        box-shadow: 0 4px 18px -8px rgba(28,27,23,0.22), 0 1px 1px rgba(28,27,23,0.06);
+        transform: rotate(var(--tilt, 0deg));
+        position: relative;
+        opacity: 0;
+        animation: noteIn 700ms ease both;
+        animation-delay: var(--delay, 0ms);
+      }
+      @media (min-width: 1200px) { .note-card-small { padding: 1.8rem 1.6rem 1.4rem; } }
+      .note-card-small::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-3deg);
+        width: 64px;
+        height: 18px;
+        background: rgba(217,199,167,0.6);
+        border: 1px solid rgba(184,156,110,0.32);
+        border-radius: 2px;
+      }
+      .note-card-small .note-text {
+        margin: 0.4rem 0 0;
+        font-family: var(--display);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--olive-deep);
+        font-size: clamp(1rem, 1.35vw, 1.6rem);
+        line-height: 1.35;
+        text-align: left;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+      }
+      .note-card-small .note-sign {
+        margin: 0.9rem 0 0;
+        text-align: right;
+        font-family: var(--serif);
+        font-size: clamp(0.55rem, 0.75vw, 0.75rem);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--champagne-mid);
+      }
+      .note-card-small.note--fresh {
+        box-shadow:
+          0 0 0 2px rgba(217,199,167,0.75),
+          0 6px 22px -6px rgba(184,156,110,0.45),
+          0 4px 18px -8px rgba(28,27,23,0.22);
+      }
+      @keyframes noteIn {
+        from { opacity: 0; transform: translateY(14px) rotate(var(--tilt, 0deg)); }
+        to   { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)); }
+      }
+      .note-card {
+        max-width: min(80vw, 900px);
+        padding: 3rem 3rem 2.5rem;
+        background: var(--cream);
+        color: var(--olive-deep);
+        border-radius: 10px;
+        box-shadow: 0 30px 80px -20px rgba(0,0,0,0.6);
+        transform: rotate(-1.4deg);
+        text-align: center;
+        position: relative;
+      }
+      .note-card::before {
+        content: '';
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-3deg);
+        width: 120px;
+        height: 28px;
+        background: rgba(217,199,167,0.7);
+        border: 1px solid rgba(184,156,110,0.4);
+        border-radius: 3px;
+      }
+      .note-card .note-text {
+        font-family: var(--display);
+        font-style: italic;
+        font-size: clamp(1.6rem, 3.4vw, 3rem);
+        line-height: 1.3;
+        margin: 0;
+      }
+      .note-card .note-sign {
+        margin: 1.5rem 0 0;
+        font-family: var(--serif);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        color: var(--champagne-mid);
+      }
+      .overlay {
+        position: fixed;
+        left: 1.5rem;
+        bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        z-index: 5;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+      }
+      .overlay .author {
+        font-family: var(--serif);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        color: var(--champagne);
+      }
+      .overlay .when { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
+      .fresh-tag {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: rgba(217,199,167,0.95);
+        color: var(--olive-deep);
+        font-family: var(--serif);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        z-index: 6;
+        opacity: 0;
+        transition: opacity 400ms ease;
+      }
+      .fresh-tag.is-on { opacity: 1; }
+      .fs-btn {
+        position: fixed;
+        top: 1.25rem;
+        right: 1.25rem;
+        background: rgba(28,27,23,0.55);
+        color: var(--cream);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 999px;
+        padding: 0.55rem 1rem;
+        font-family: var(--serif);
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        cursor: pointer;
+        z-index: 30;
+        backdrop-filter: blur(6px);
+        transition: opacity 0.6s ease;
+      }
+      .fs-btn.is-dim { opacity: 0; pointer-events: none; }
+      .fs-btn:hover { background: rgba(28,27,23,0.85); }
+      .empty {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--display);
+        font-style: italic;
+        font-size: clamp(1.5rem, 3vw, 2.2rem);
+        color: var(--champagne);
+        text-align: center;
+        padding: 2rem;
+      }
+      .empty.hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div id="overlay" class="overlay" style="display:none">
+      <span class="author" id="overlay-author"></span>
+      <span class="when" id="overlay-when"></span>
+    </div>
+    <div id="fresh" class="fresh-tag">recién subida</div>
+    <div id="empty" class="empty hidden">
+      Esperando los primeros momentos…
+    </div>
+    <button id="fs-btn" type="button" class="fs-btn">Pantalla completa</button>
+    <script src="/slideshow.js" type="module"></script>
+  </body>
+</html>

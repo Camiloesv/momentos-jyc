@@ -19,27 +19,32 @@
       <p class="eyebrow">Mini-álbum</p>
       <h1 class="display">Jesyka & Camilo</h1>
       <p class="hint">Queremos verlos a través de tus ojos.</p>
+      <p class="topbar-actions">
+        <a href="/slideshow.html" target="_blank" rel="noopener" class="btn-ghost">Modo presentación</a>
+      </p>
     </header>
 
     <main>
       <section class="panel">
         <label class="field-label">
           <span class="eyebrow">Tu nombre <span class="muted">(opcional)</span></span>
-          <input id="author" type="text" maxlength="60" autocomplete="name" placeholder="Cómo firmas tu foto" />
+          <input id="author" type="text" maxlength="60" autocomplete="name" placeholder="Escribe tu nombre" />
         </label>
 
-        <div class="actions actions--three">
-          <label class="btn-primary">
+        <div class="actions actions--three actions--equal">
+          <label class="btn-action btn-action--photo">
             <input id="pick-photo" type="file" accept="image/*" capture="environment" hidden />
-            <span>Tomar foto</span>
+            <span>Foto</span>
           </label>
-          <label class="btn-outline">
+          <label class="btn-action btn-action--video">
             <input id="pick-video" type="file" accept="video/*" capture="environment" hidden />
-            <span>Grabar video</span>
+            <span>Video</span>
           </label>
-          <button id="open-note" type="button" class="btn-outline">Dejar una nota</button>
+          <button id="open-note" type="button" class="btn-action btn-action--note">
+            <span>Nota</span>
+          </button>
         </div>
-        <p class="hint small">Video hasta 60 segundos · Foto hasta 15 MB · Nota hasta 280 caracteres</p>
+        <p class="hint small">Sube lo que quieras: foto, video o una nota corta. Todo entra al álbum.</p>
 
         <div id="preview" class="preview hidden" aria-live="polite"></div>
         <div id="progress" class="progress hidden"><div class="bar"></div><span class="label"></span></div>
@@ -71,13 +76,52 @@
       </section>
     </main>
 
+    <div id="admin-bar" class="admin-bar hidden">
+      <span class="admin-bar-label">Modo admin</span>
+      <button id="admin-toggle-hidden" type="button" class="admin-bar-btn">Ver ocultos</button>
+      <button id="admin-logout" type="button" class="admin-bar-btn">Salir</button>
+    </div>
+
     <footer class="footer">
       <p>Hecho con cariño para nuestra boda · 2026</p>
+      <button id="admin-dot" type="button" class="admin-dot" aria-label="Acceso administrador">♡</button>
     </footer>
+
+    <div id="admin-modal" class="confirm hidden" role="dialog" aria-modal="true" aria-label="Acceso administrador">
+      <div class="confirm-card">
+        <p class="eyebrow">Acceso administrador</p>
+        <label class="field-label">
+          <span class="hint small">Código</span>
+          <input id="admin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="20" />
+        </label>
+        <p id="admin-error" class="status error" style="min-height:1em;"></p>
+        <div class="confirm-actions">
+          <button id="admin-cancel" type="button" class="btn-outline">Cancelar</button>
+          <button id="admin-ok" type="button" class="btn-primary">Entrar</button>
+        </div>
+      </div>
+    </div>
 
     <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Vista previa">
       <button type="button" class="lightbox-close" aria-label="Cerrar">✕</button>
       <div class="lightbox-content"></div>
+    </div>
+
+    <div id="confirm-delete" class="confirm hidden" role="dialog" aria-modal="true" aria-label="Confirmar">
+      <div class="confirm-card">
+        <p id="confirm-title" class="eyebrow">Borrar tu momento</p>
+        <div id="confirm-thumb" class="confirm-thumb"></div>
+        <p id="confirm-hint" class="hint small">Solo vos lo podés deshacer durante 10 segundos.</p>
+        <div class="confirm-actions">
+          <button id="confirm-cancel" type="button" class="btn-outline">Cancelar</button>
+          <button id="confirm-ok" type="button" class="btn-danger">Borrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite">
+      <span id="toast-msg"></span>
+      <button id="toast-undo" type="button" class="toast-undo">Deshacer</button>
     </div>
 
     <script src="/app.js" type="module"></script>

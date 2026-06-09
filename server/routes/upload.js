@@ -2,6 +2,7 @@ import { queries } from '../lib/db.js';
 import { detectKind, enforceSize, VALID_MOMENTS } from '../lib/validate.js';
 import { saveBuffer } from '../lib/storage.js';
 import { emitNew } from '../lib/events.js';
+import { readUploaderId } from '../lib/uploader.js';
 
 export default async function uploadRoute(fastify, opts) {
   const { uploadDir, maxImageBytes, maxVideoBytes } = opts;
@@ -57,6 +58,7 @@ export default async function uploadRoute(fastify, opts) {
 
     const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ?? req.ip;
     const userAgent = req.headers['user-agent']?.toString().slice(0, 300) ?? null;
+    const uploaderId = readUploaderId(req);
 
     const item = {
       id,
@@ -69,6 +71,7 @@ export default async function uploadRoute(fastify, opts) {
       body: null,
       ip,
       user_agent: userAgent,
+      uploader_id: uploaderId,
     };
 
     queries.insertItem().run(item);
@@ -80,6 +83,7 @@ export default async function uploadRoute(fastify, opts) {
       url: `/uploads/${filename}`,
       author,
       body: null,
+      uploader_id: uploaderId,
       created_at: Math.floor(Date.now() / 1000),
     };
 

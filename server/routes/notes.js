@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { queries } from '../lib/db.js';
 import { emitNew } from '../lib/events.js';
+import { readUploaderId } from '../lib/uploader.js';
 
 const MAX_BODY_CHARS = 280;
 // rechaza caracteres de control salvo \n (0x0A) y \t (0x09)
@@ -33,6 +34,7 @@ export default async function notesRoute(fastify) {
     const id = randomUUID();
     const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ?? req.ip;
     const userAgent = req.headers['user-agent']?.toString().slice(0, 300) ?? null;
+    const uploaderId = readUploaderId(req);
 
     queries.insertItem().run({
       id,
@@ -45,6 +47,7 @@ export default async function notesRoute(fastify) {
       body,
       ip,
       user_agent: userAgent,
+      uploader_id: uploaderId,
     });
 
     const publicItem = {
@@ -54,6 +57,7 @@ export default async function notesRoute(fastify) {
       url: null,
       author,
       body,
+      uploader_id: uploaderId,
       created_at: Math.floor(Date.now() / 1000),
     };
 

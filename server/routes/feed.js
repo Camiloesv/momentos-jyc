@@ -17,6 +17,8 @@ export default async function feedRoute(fastify) {
       url: r.filename ? `/uploads/${r.filename}` : null,
       author: r.author,
       body: r.body ?? null,
+      uploader_id: r.uploader_id ?? null,
+      source: r.source ?? 'app',
       created_at: r.created_at,
     }));
 
