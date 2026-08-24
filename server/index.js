@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { promises as fs } from 'node:fs';
 import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
-import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 
 import { initDb } from './lib/db.js';
@@ -39,12 +38,6 @@ const fastify = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
   trustProxy: true,
   bodyLimit: MAX_VIDEO_BYTES + 1024 * 1024,
-});
-
-await fastify.register(rateLimit, {
-  max: 30,
-  timeWindow: '10 minutes',
-  allowList: (req) => req.url.startsWith('/api/stream') || req.url.startsWith('/api/feed'),
 });
 
 await fastify.register(multipart, {
